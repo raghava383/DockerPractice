@@ -1,0 +1,204 @@
+$ which docker
+$  yum update -y
+$ yum install docker -y
+$ service docker status
+$ service docker start
+$ chkconfig docker on
+$ docker --version
+
+Ce - community edition
+$ docker info
+$ docker images
+$ docker ps -a
+$ docker ps
+$ docker run -it ubuntu /bin/bash
+Run - Creating a container
+I - Interaction mode
+T - Terminal
+Ubuntu - image
+/bin/bash - Shell
+
+Library - Online Repository
+Container ID
+
+	# cat /etc/os-release
+	# ls
+	# exit
+$ docker ps
+$ docker images
+$ docker ps -a (container id and status)
+$ docker run -it ubuntu /bin/bash --> 2nd Container with same downloaded docker image (ubuntu)
+$ docker search ubuntu --> to search images in docker hub
+$ docker run -it chef/chefdk /bin/bash
+	# which chef
+	# cat /etc/os-release
+	# exit
+$ docker images, ps, ps -a
+$ docker pull jenkins/jenkins
+$ docker images
+$ docker ps -a
+$ docker rename old-name new-name --> 1 way
+$ docker run -it --name DevOpsContainer1 ubuntu /bin/bash --> 2 way
+$ docker start container-name/id --> to start the container
+$ docker ps
+$ docker attach container-id --> to enter into the container
+	# exit
+
+$ docker stop container-name/id --> to stop the container
+$ docker rm container-name/id --> to delete a container
+	start -> attach -> exit -> stop -> remove
+
+$ docker run -it --name FirstDockerContainer ubuntu /bin/bash
+	# apt-get update -y
+	# apt-get install apache2 -y
+	# apt-get install tree -y
+	# which tree
+	# cd /tmp
+	# touch myfile1
+	# exit
+$ docker commit FirstDockerContainer FirstDockerImage
+$ docker images
+$ docker run -it --name SecondDockerContainer FirstDockerImage /bin/bash
+	# which tree
+	# which apache2
+	# ls
+	# cat /tmp/myfile1
+	# exit
+$ vi Dockerfile
+	FROM ubuntu
+	RUN echo "Hey welcome to the Docker World !!!" > /tmp/testfile1
+	RUN apt-get update -y
+	RUN apt-get install httpd -y
+	:wq
+$ docker build -t testImage .
+$ docker run -it --name TestContainer testImage /bin/bash
+$ vi SecondDockerFile
+	FROM ubuntu
+	WORKDIR /tmp
+	RUN echo "Welcome to Docker World !!! " > /tmp/testfile2
+	ENV myname Raghavendra
+	COPY testfile2 /tmp
+	ADD testfile2.tar.gz /tmp
+	:wq
+----------------------------------------------------------------------------------------------------
+$ vi Dockerfile
+	FROM ubuntu
+	VOLUME ["/data"]
+	:wq
+$ docker build -t myimage .
+$ docker images
+$ docker run -it --name volumeDemoContainer myimage /bin/bash
+	# ls (data folder should be created)
+	# cd data
+	# ls
+	# touch myfile
+	# ls
+	# exit
+$ docker ps -a
+$ docker run -it --name volumeDemoContainer1 --privileged=true --volumes-from volumeDemoContainer ubuntu /bin/bash
+	# ls (data folder will be mapped from volumeDemoContainer to volumeDemoContainer1)
+	# cd data
+	# ls (myfile should be present)
+	# touch testfile
+	# exit
+$ docker start volumeDemoContainer
+$ docker attach volumeDemoContainer
+	# ls
+	# cd data
+	# myfile testfile (automatically testfile will be mapped from volumeDemoContainer1)
+	# exit
+$ docker run -it --name volumeDemoContainer2 -v /Gupta ubuntu /bin/bash (-v means volume -- this is not a normal folder)
+	# ls
+	# cd Gupta
+	# touch testfile2
+	# exit
+$ docker run -it --name volumeDemoContainer3 --privileged=true --volumes-from volumeDemoContainer2 ubuntu /bin/bash
+	# ls (Gupta folder and it's contents will be mapped automatically here)
+	# cd Gupta
+	# ls
+	# touch testfile3
+	# exit
+$ docker start volumeDemoContainer2
+$ docker attach volumeDemoContainer2
+	# ls
+	# cd Gupta
+	# testfile2 testfile3
+	# exit
+	
+$ docker run -it --name volumeHostDemo1 -v /home/ec2-user:/Gupta ubuntu /bin/bash
+	# ls (Gupta folder will be created and mapped all the files from Host i.e. ec2-user)
+	# cd Gupta
+	# ls
+	# Dockerfile testfile1 test.tar.gz
+	# touch hostfile1
+	# exit
+$ ls (hostfile1 can be seen here)
+$ docker start volumeHostDemo1
+$ docker attach volumeHostDemo1
+	# ls (Gupta folder should be present)
+	# exit
+$ docker inspect volumeHostDemo1 (to see full details of the container even if it is in stopped state)
+	"Mounts": [
+		{
+			"Type": "bind",
+			"Source": "home/ec2-user",
+			"Destination": "/Gupta",
+			"Mode" : "",
+			"RW": "true",
+			"Propagation": "rprivate"
+		}
+------------------------------------------------------------------------
+$ docker run -td --name webserver -p 80:80 ubuntu
+	-t --> terminal
+	-d --> detached mode (daemon)
+	First 80 --> host port number
+	Second 80 --> Container port number
+$ docker port webserver
+$ docker exec -it webserver /bin/bash
+	# apt-get update -y
+	# apt-get install apache2 -y
+	# cd /var/www/html
+	# echo "Hello welcome to Docker Host-Container Port mapping" > index.html
+	# service apache2 start
+--> Copy publicIP of EC2 instance and hit this in browser publicIP:80 
+
+$ docker login
+	# username
+	# password
+$ docker tag myimage raghava383/mynewimage
+$ docker push raghava383/mynewimage
+
+--> Create another EC2 instance and pull this image
+$ docker pull raghava383/mynewimage
+$ docker images
+REPOSITORY              TAG                 IMAGE ID            CREATED             SIZE
+raghava383/mynewimage   latest              4598c602fa65        24 hours ago        72.9MB
+
+--> Make above image as "Private" in hub.docker.com and try to pull
+	1. Search for the image
+	2. Go to Settings
+	3. Click on 'Make Private'
+	4. Provide name and click on OK
+
+--> try to access the same image
+$ docker pull raghava383/mynewimage
+--> Not allowed to download private images
+
+$ docker login
+	# Username
+	# Password
+$ docker pull raghava383/mynewimage
+$ docker run -it --name japancont raghava383/mynewimage /bin/bash
+	# ls
+	# exit
+	
+--> To stop all the running containers
+$ docker stop $(docker ps -a -q)
+
+--> To remove all the containers
+$ docker rm $(docker ps -a -q)
+
+--> To remove all docker images
+$ docker rmi -f $(docker images -q)
+
+
